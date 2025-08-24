@@ -3,7 +3,16 @@
     "Backend": {
       "candid": "Backend/Backend.did",
       "package": "Backend",
-      "type": "rust"
+      "type": "rust",
+      "declarations": {
+        "output": "Frontend/src/declarations/Auction_backend",
+        "bindings": ["js", "ts", "did"]
+      }
+
+    },
+    "Frontend": {
+      "source": ["Frontend/dist"],
+      "type": "assets"
     }
   },
   "defaults": {
