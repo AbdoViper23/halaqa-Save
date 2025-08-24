@@ -5,7 +5,7 @@
       "package": "Backend",
       "type": "rust",
       "declarations": {
-        "output": "Frontend/src/declarations/Auction_backend",
+        "output": "Frontend/src/declarations/Backend",
         "bindings": ["js", "ts", "did"]
       }
 
