@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/halaqa-Save-backend"
+]
+resolver = "2"
