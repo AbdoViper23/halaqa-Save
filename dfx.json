@@ -8,11 +8,19 @@
         "output": "Frontend/src/declarations/Backend",
         "bindings": ["js", "ts", "did"]
       }
-
     },
     "Frontend": {
       "source": ["Frontend/dist"],
       "type": "assets"
+    },
+    "icrc2_token": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/1db8f933fdadc81a90e7db2389b081e21263a9b6/rs/ledger_suite/icrc1/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/1db8f933fdadc81a90e7db2389b081e21263a9b6/canisters/ic-icrc1-ledger.wasm.gz",
+      "declarations": {
+        "output": "Frontend/src/declarations/icrc2_token",
+        "bindings": ["js", "ts", "did"]
+      }
     }
   },
   "defaults": {
