@@ -25,6 +25,277 @@ import {
 } from 'lucide-react';
 import { CreateGroupData } from '@/types';
 
+// Step components defined outside to prevent re-creation on each render
+const Step1BasicInfo = ({ formData, updateFormData }: { 
+  formData: CreateGroupData, 
+  updateFormData: (updates: Partial<CreateGroupData>) => void 
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <span>Basic Information</span>
+      </CardTitle>
+      <CardDescription>Give your savings group a name and description</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="groupName">Group Name *</Label>
+        <Input
+          id="groupName"
+          placeholder="e.g., Young Professionals Savings Circle"
+          value={formData.name}
+          onChange={(e) => updateFormData({ name: e.target.value })}
+          className="text-lg"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description">Description *</Label>
+        <Textarea
+          id="description"
+          placeholder="Describe the purpose and goals of your savings group..."
+          value={formData.description}
+          onChange={(e) => updateFormData({ description: e.target.value })}
+          rows={4}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="image">Group Image (Optional)</Label>
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
+          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const Step2Settings = ({ formData, updateFormData }: { 
+  formData: CreateGroupData, 
+  updateFormData: (updates: Partial<CreateGroupData>) => void 
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <DollarSign className="h-5 w-5 text-primary" />
+        <span>Group Settings</span>
+      </CardTitle>
+      <CardDescription>Configure the financial details of your group</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="monthlyAmount">Monthly Contribution *</Label>
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="monthlyAmount"
+              type="number"
+              placeholder="500"
+              value={formData.monthlyAmount}
+              onChange={(e) => updateFormData({ monthlyAmount: Number(e.target.value) || 0 })}
+              className="pl-10 text-lg"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">Amount each member contributes monthly</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="totalMembers">Total Members *</Label>
+          <div className="relative">
+            <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="totalMembers"
+              type="number"
+              min="2"
+              max="50"
+              value={formData.totalMembers}
+              onChange={(e) => updateFormData({ totalMembers: Number(e.target.value) || 2 })}
+              className="pl-10 text-lg"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">Maximum number of participants</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="duration">Duration (Months) *</Label>
+        <div className="relative">
+          <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="duration"
+            type="number"
+            min="2"
+            max="24"
+            value={formData.duration}
+            onChange={(e) => updateFormData({ duration: Number(e.target.value) || 2 })}
+            className="pl-10 text-lg"
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">How long the savings cycle will run</p>
+      </div>
+
+      {/* Preview calculations */}
+      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+        <h4 className="font-medium">Preview</h4>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Total Pool:</span>
+            <span className="ml-2 font-medium">
+              ${(formData.monthlyAmount * formData.totalMembers).toLocaleString()}
+            </span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Your Total:</span>
+            <span className="ml-2 font-medium">
+              ${(formData.monthlyAmount * formData.duration).toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const Step3PayoutOrder = ({ formData, updateFormData }: { 
+  formData: CreateGroupData, 
+  updateFormData: (updates: Partial<CreateGroupData>) => void 
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <Calendar className="h-5 w-5 text-primary" />
+        <span>Payout Order</span>
+      </CardTitle>
+      <CardDescription>Choose how payout months are assigned</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <RadioGroup 
+        value={formData.payoutOrder} 
+        onValueChange={(value: 'auto' | 'manual') => updateFormData({ payoutOrder: value })}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50">
+            <RadioGroupItem value="auto" id="auto" />
+            <Label htmlFor="auto" className="flex-1 cursor-pointer">
+              <div>
+                <p className="font-medium">Auto-assign (Recommended)</p>
+                <p className="text-sm text-muted-foreground">
+                  Members will be randomly assigned payout months when they join
+                </p>
+              </div>
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50">
+            <RadioGroupItem value="manual" id="manual" />
+            <Label htmlFor="manual" className="flex-1 cursor-pointer">
+              <div>
+                <p className="font-medium">Manual Selection</p>
+                <p className="text-sm text-muted-foreground">
+                  Members can choose their preferred payout month (first-come, first-served)
+                </p>
+              </div>
+            </Label>
+          </div>
+        </div>
+      </RadioGroup>
+
+      {formData.payoutOrder === 'auto' && (
+        <div className="bg-muted border border-border rounded-lg p-4">
+          <div className="flex items-start space-x-2">
+            <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-card-foreground">
+                Auto-assignment Benefits
+              </p>
+              <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                <li>• Fair and random distribution</li>
+                <li>• Faster group filling</li>
+                <li>• No conflicts over popular months</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
+
+const Step4Review = ({ formData }: { formData: CreateGroupData }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <Eye className="h-5 w-5 text-primary" />
+        <span>Review & Create</span>
+      </CardTitle>
+      <CardDescription>Review your group settings before creating</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Group Name</Label>
+            <p className="text-lg font-medium">{formData.name || 'Untitled Group'}</p>
+          </div>
+          
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+            <p className="text-sm">{formData.description || 'No description provided'}</p>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Payout Method</Label>
+            <Badge variant="outline" className="mt-1">
+              {formData.payoutOrder === 'auto' ? 'Auto-assign' : 'Manual Selection'}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-4">
+            <h4 className="font-medium mb-3">Financial Summary</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Monthly Contribution:</span>
+                <span className="font-medium">${formData.monthlyAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Members:</span>
+                <span className="font-medium">{formData.totalMembers}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span className="font-medium">{formData.duration} months</span>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between font-medium">
+                  <span>Monthly Pool:</span>
+                  <span>${(formData.monthlyAmount * formData.totalMembers).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-primary font-medium">
+                  <span>Your Total Investment:</span>
+                  <span>${(formData.monthlyAmount * formData.duration).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+        <p className="text-sm text-card-foreground">
+          <strong>Important:</strong> Once created, group settings cannot be changed. 
+          Make sure all details are correct before proceeding.
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const CreateGroup = () => {
   const navigate = useNavigate();
   const { createGroup } = useGroupsStore();
@@ -140,267 +411,6 @@ const CreateGroup = () => {
     </div>
   );
 
-  const Step1BasicInfo = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <span>Basic Information</span>
-        </CardTitle>
-        <CardDescription>Give your savings group a name and description</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="groupName">Group Name *</Label>
-          <Input
-            id="groupName"
-            placeholder="e.g., Young Professionals Savings Circle"
-            value={formData.name}
-            onChange={(e) => updateFormData({ name: e.target.value })}
-            className="text-lg"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="description">Description *</Label>
-          <Textarea
-            id="description"
-            placeholder="Describe the purpose and goals of your savings group..."
-            value={formData.description}
-            onChange={(e) => updateFormData({ description: e.target.value })}
-            rows={4}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="image">Group Image (Optional)</Label>
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
-            <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const Step2Settings = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <DollarSign className="h-5 w-5 text-primary" />
-          <span>Group Settings</span>
-        </CardTitle>
-        <CardDescription>Configure the financial details of your group</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="monthlyAmount">Monthly Contribution *</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="monthlyAmount"
-                type="number"
-                placeholder="500"
-                value={formData.monthlyAmount}
-                onChange={(e) => updateFormData({ monthlyAmount: Number(e.target.value) })}
-                className="pl-10 text-lg"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">Amount each member contributes monthly</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="totalMembers">Total Members *</Label>
-            <div className="relative">
-              <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="totalMembers"
-                type="number"
-                min="2"
-                max="50"
-                value={formData.totalMembers}
-                onChange={(e) => updateFormData({ totalMembers: Number(e.target.value) })}
-                className="pl-10 text-lg"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">Maximum number of participants</p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="duration">Duration (Months) *</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="duration"
-              type="number"
-              min="2"
-              max="24"
-              value={formData.duration}
-              onChange={(e) => updateFormData({ duration: Number(e.target.value) })}
-              className="pl-10 text-lg"
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">How long the savings cycle will run</p>
-        </div>
-
-        {/* Preview calculations */}
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-          <h4 className="font-medium">Preview</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Total Pool:</span>
-              <span className="ml-2 font-medium">
-                ${(formData.monthlyAmount * formData.totalMembers).toLocaleString()}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Your Total:</span>
-              <span className="ml-2 font-medium">
-                ${(formData.monthlyAmount * formData.duration).toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const Step3PayoutOrder = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <span>Payout Order</span>
-        </CardTitle>
-        <CardDescription>Choose how payout months are assigned</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <RadioGroup 
-          value={formData.payoutOrder} 
-          onValueChange={(value: 'auto' | 'manual') => updateFormData({ payoutOrder: value })}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50">
-              <RadioGroupItem value="auto" id="auto" />
-              <Label htmlFor="auto" className="flex-1 cursor-pointer">
-                <div>
-                  <p className="font-medium">Auto-assign (Recommended)</p>
-                  <p className="text-sm text-muted-foreground">
-                    Members will be randomly assigned payout months when they join
-                  </p>
-                </div>
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted/50">
-              <RadioGroupItem value="manual" id="manual" />
-              <Label htmlFor="manual" className="flex-1 cursor-pointer">
-                <div>
-                  <p className="font-medium">Manual Selection</p>
-                  <p className="text-sm text-muted-foreground">
-                    Members can choose their preferred payout month (first-come, first-served)
-                  </p>
-                </div>
-              </Label>
-            </div>
-          </div>
-        </RadioGroup>
-
-        {formData.payoutOrder === 'auto' && (
-          <div className="bg-muted border border-border rounded-lg p-4">
-            <div className="flex items-start space-x-2">
-              <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-card-foreground">
-                  Auto-assignment Benefits
-                </p>
-                <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                  <li>• Fair and random distribution</li>
-                  <li>• Faster group filling</li>
-                  <li>• No conflicts over popular months</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const Step4Review = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Eye className="h-5 w-5 text-primary" />
-          <span>Review & Create</span>
-        </CardTitle>
-        <CardDescription>Review your group settings before creating</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Group Name</Label>
-              <p className="text-lg font-medium">{formData.name || 'Untitled Group'}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Description</Label>
-              <p className="text-sm">{formData.description || 'No description provided'}</p>
-            </div>
-
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Payout Method</Label>
-              <Badge variant="outline" className="mt-1">
-                {formData.payoutOrder === 'auto' ? 'Auto-assign' : 'Manual Selection'}
-              </Badge>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-4">
-              <h4 className="font-medium mb-3">Financial Summary</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Monthly Contribution:</span>
-                  <span className="font-medium">${formData.monthlyAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Members:</span>
-                  <span className="font-medium">{formData.totalMembers}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Duration:</span>
-                  <span className="font-medium">{formData.duration} months</span>
-                </div>
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between font-medium">
-                    <span>Monthly Pool:</span>
-                    <span>${(formData.monthlyAmount * formData.totalMembers).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-primary font-medium">
-                    <span>Your Total Investment:</span>
-                    <span>${(formData.monthlyAmount * formData.duration).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-          <p className="text-sm text-card-foreground">
-            <strong>Important:</strong> Once created, group settings cannot be changed. 
-            Make sure all details are correct before proceeding.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
@@ -419,15 +429,15 @@ const CreateGroup = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1BasicInfo />;
+        return <Step1BasicInfo formData={formData} updateFormData={updateFormData} />;
       case 2:
-        return <Step2Settings />;
+        return <Step2Settings formData={formData} updateFormData={updateFormData} />;
       case 3:
-        return <Step3PayoutOrder />;
+        return <Step3PayoutOrder formData={formData} updateFormData={updateFormData} />;
       case 4:
-        return <Step4Review />;
+        return <Step4Review formData={formData} />;
       default:
-        return <Step1BasicInfo />;
+        return <Step1BasicInfo formData={formData} updateFormData={updateFormData} />;
     }
   };
 
