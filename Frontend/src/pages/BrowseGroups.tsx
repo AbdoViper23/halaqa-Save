@@ -115,7 +115,6 @@ const BrowseGroups = () => {
   }, [availableGroups, searchTerm, filters]);
 
   const handleJoinGroup = async (groupId: string, slotNumber: number) => {
-    setIsLoading(true);
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -133,8 +132,6 @@ const BrowseGroups = () => {
         description: "Please try again later.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

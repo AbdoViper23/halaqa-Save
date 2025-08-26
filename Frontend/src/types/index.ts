@@ -19,6 +19,7 @@ export interface Group {
   startDate: string;
   createdBy: string;
   currentCycle: number;
+  payoutOrder: 'auto' | 'manual';
 }
 
 export interface UserProfile {

@@ -67,6 +67,11 @@ const convertBackendToFrontendGroup = (backendGroup: BackendGroup): FrontendGrou
   else if ('Cancelled' in backendGroup.status) status = 'cancelled';
   else if ('Pending' in backendGroup.status) status = 'pending';
   
+  // Convert payout order
+  let payoutOrder: 'auto' | 'manual' = 'auto';
+  if ('Manual' in backendGroup.payout_order) payoutOrder = 'manual';
+  else if ('Auto' in backendGroup.payout_order) payoutOrder = 'auto';
+  
   // Debug: Uncomment for debugging
   // console.log(`🔄 Converting group "${backendGroup.name}":`, {
   //   backendStatus: backendGroup.status,
@@ -90,6 +95,7 @@ const convertBackendToFrontendGroup = (backendGroup: BackendGroup): FrontendGrou
     startDate: new Date(Number(backendGroup.created_at) / 1000000).toISOString().split('T')[0],
     createdBy: backendGroup.created_by,
     currentCycle: backendGroup.current_cycle,
+    payoutOrder,
   };
 };
 
@@ -134,6 +140,7 @@ const mockGroups: FrontendGroup[] = [
     startDate: '2024-02-01',
     createdBy: 'mock-user-2',
     currentCycle: 1,
+    payoutOrder: 'auto',
   },
   {
     id: 'group-3',
