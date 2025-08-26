@@ -52,7 +52,7 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-primary-foreground/60 text-sm">
-            © 2024 Halaqa. All rights reserved.
+            © 2025 Halaqa. All rights reserved.
           </p>
           <p className="text-primary-foreground/60 text-sm mt-4 md:mt-0">
             Powered by community savings
