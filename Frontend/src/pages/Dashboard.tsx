@@ -3,14 +3,61 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, DollarSign, Calendar, TrendingUp, Plus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useUserStore } from "@/stores/useUserStore";
+import { useGroupsStore } from "@/stores/useGroupsStore";
+import { CreateUserPrompt } from "@/components/CreateUserPrompt";
 
 const Dashboard = () => {
-  // Mock data
+  const { 
+    profile, 
+    user, 
+    fetchCurrentUser,
+    isLoading: userLoading 
+  } = useUserStore();
+  
+  const { 
+    groups, 
+    fetchAvailableGroups,
+    isLoading: groupsLoading 
+  } = useGroupsStore();
+
+  // Fetch user data and groups on component mount
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchAvailableGroups();
+  }, [fetchCurrentUser, fetchAvailableGroups]);
+
+  // Calculate stats from real data
+  const currentUserGroups = groups.filter(group => 
+    user?.joined_groups?.includes(group.id) || false
+  );
+
   const stats = [
-    { title: "Total Savings", value: "$3,240", icon: DollarSign, change: "+12%" },
-    { title: "Active Groups", value: "3", icon: Users, change: "+1" },
-    { title: "Next Payout", value: "Mar 15", icon: Calendar, change: "2 days" },
-    { title: "Success Rate", value: "98%", icon: TrendingUp, change: "+2%" },
+    { 
+      title: "Total Savings", 
+      value: profile?.totalSaved ? `$${profile.totalSaved.toLocaleString()}` : "$0", 
+      icon: DollarSign, 
+      change: "+12%" 
+    },
+    { 
+      title: "Active Groups", 
+      value: currentUserGroups.length.toString(), 
+      icon: Users, 
+      change: "+1" 
+    },
+    { 
+      title: "Next Payout", 
+      value: "Mar 15", 
+      icon: Calendar, 
+      change: "2 days" 
+    },
+    { 
+      title: "Success Rate", 
+      value: profile?.successRate ? `${profile.successRate}%` : "0%", 
+      icon: TrendingUp, 
+      change: "+2%" 
+    },
   ];
 
   const userGroups = [
@@ -52,6 +99,11 @@ const Dashboard = () => {
     { type: "joined", message: "New member joined Investment Club", time: "2 days ago" },
     { type: "payment", message: "You made payment to Investment Club", time: "3 days ago" },
   ];
+
+  // Show CreateUserPrompt if no user exists
+  if (!userLoading && !user) {
+    return <CreateUserPrompt />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

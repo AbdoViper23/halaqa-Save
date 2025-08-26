@@ -65,16 +65,24 @@ const CreateGroup = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const newGroup = await createGroup(formData);
-      joinGroup(newGroup.id);
+      const success = await createGroup(formData);
       
-      toast({
-        title: "Group Created Successfully!",
-        description: `${formData.name} is now ready for members to join.`,
-      });
-      
-      navigate('/dashboard');
+      if (success) {
+        toast({
+          title: "Group Created Successfully!",
+          description: `${formData.name} is now ready for members to join.`,
+        });
+        
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Error Creating Group",
+          description: "Failed to create group. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Create group error:', error);
       toast({
         title: "Error Creating Group",
         description: "Something went wrong. Please try again.",

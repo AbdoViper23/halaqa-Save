@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserStore } from '@/stores/useUserStore';
 import { useGroupsStore } from '@/stores/useGroupsStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +27,21 @@ import {
 import { Link } from 'react-router-dom';
 
 const Profile = () => {
-  const { profile, transactions, userGroups } = useUserStore();
+  const { 
+    profile, 
+    transactions, 
+    userGroups, 
+    fetchCurrentUser,
+    isLoading: userLoading 
+  } = useUserStore();
   const { getUserGroups } = useGroupsStore();
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(false);
 
   const userGroupsData = getUserGroups(userGroups);
 

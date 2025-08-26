@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Search, Filter, DollarSign, Calendar, Clock, Sparkles } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useGroupsStore } from "@/stores/useGroupsStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,6 @@ const BrowseGroups = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     amountRange: [0, 2000],
     duration: 'any',
@@ -31,9 +30,32 @@ const BrowseGroups = () => {
     startDate: ''
   });
 
-  const { groups, getAvailableGroups, joinGroupSlot } = useGroupsStore();
+  const { 
+    groups, 
+    getAvailableGroups, 
+    joinGroupSlot, 
+    fetchAvailableGroups,
+    isLoading: groupsLoading,
+    error: groupsError 
+  } = useGroupsStore();
   const { joinGroup: joinUserGroup } = useUserStore();
   const { toast } = useToast();
+
+  // Fetch groups from backend on component mount
+  useEffect(() => {
+    fetchAvailableGroups();
+  }, [fetchAvailableGroups]);
+
+  // Show error if groups failed to load
+  useEffect(() => {
+    if (groupsError) {
+      toast({
+        title: "Error Loading Groups",
+        description: groupsError,
+        variant: "destructive",
+      });
+    }
+  }, [groupsError, toast]);
 
   // Get only groups with available slots
   const availableGroups = getAvailableGroups();
@@ -202,7 +224,7 @@ const BrowseGroups = () => {
         )}
 
         {/* Groups Grid */}
-        {isLoading ? (
+        {groupsLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="shadow-soft">
@@ -353,7 +375,7 @@ const BrowseGroups = () => {
         )}
 
         {/* No Results */}
-        {!isLoading && filteredGroups.length === 0 && (
+        {!groupsLoading && filteredGroups.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="font-semibold text-xl text-foreground mb-2">
