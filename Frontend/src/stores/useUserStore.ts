@@ -63,12 +63,56 @@ const convertPaymentToTransaction = (payment: CyclePayment, groupName: string): 
   paymentProof: payment.paid_at ? 'blockchain-proof' : undefined,
 });
 
+// Mock data for development
+const mockProfile: UserProfile = {
+  id: 'mock-user-1',
+  name: 'Ahmed Mohamed',
+  avatar: '',
+  totalSaved: 15000,
+  activeGroups: 3,
+  completedGroups: 2,
+  successRate: 95,
+  joinedDate: '2024-01-15',
+};
+
+const mockTransactions: Transaction[] = [
+  {
+    id: 'tx-1',
+    groupId: 'group-1',
+    groupName: 'First Savings Group',
+    amount: 500,
+    date: '2024-01-15',
+    status: 'completed',
+    type: 'payment',
+    paymentProof: 'blockchain-proof'
+  },
+  {
+    id: 'tx-2',
+    groupId: 'group-2', 
+    groupName: 'Second Savings Group',
+    amount: 1000,
+    date: '2024-01-10',
+    status: 'pending',
+    type: 'payment'
+  },
+  {
+    id: 'tx-3',
+    groupId: 'group-1',
+    groupName: 'First Savings Group',
+    amount: 5000,
+    date: '2024-01-05',
+    status: 'completed',
+    type: 'payout',
+    paymentProof: 'blockchain-proof'
+  }
+];
+
 export const useUserStore = create<UserStore>((set, get) => ({
-  // Initial state
-  profile: null,
+  // Initial state with mock data
+  profile: mockProfile,
   user: null,
-  transactions: [],
-  userGroups: [],
+  transactions: mockTransactions,
+  userGroups: ['group-1', 'group-2', 'group-3'],
   actor: null,
   isLoading: false,
   error: null,

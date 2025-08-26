@@ -67,14 +67,15 @@ const convertBackendToFrontendGroup = (backendGroup: BackendGroup): FrontendGrou
   else if ('Cancelled' in backendGroup.status) status = 'cancelled';
   else if ('Pending' in backendGroup.status) status = 'pending';
   
-  console.log(`🔄 Converting group "${backendGroup.name}":`, {
-    backendStatus: backendGroup.status,
-    frontendStatus: status,
-    currentMembers: backendGroup.current_members,
-    totalMembers: backendGroup.total_members,
-    availableSlots: backendGroup.available_slots.length,
-    needsMoreMembers: status === 'pending'
-  });
+  // Debug: Uncomment for debugging
+  // console.log(`🔄 Converting group "${backendGroup.name}":`, {
+  //   backendStatus: backendGroup.status,
+  //   frontendStatus: status,
+  //   currentMembers: backendGroup.current_members,
+  //   totalMembers: backendGroup.total_members,
+  //   availableSlots: backendGroup.available_slots.length,
+  //   needsMoreMembers: status === 'pending'
+  // });
 
   return {
     id: backendGroup.id,
@@ -92,9 +93,73 @@ const convertBackendToFrontendGroup = (backendGroup: BackendGroup): FrontendGrou
   };
 };
 
+// Mock data for development
+const mockGroups: FrontendGroup[] = [
+  {
+    id: 'group-1',
+    name: 'First Savings Group',
+    description: 'Monthly savings group for short-term goals',
+    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop',
+    monthlyAmount: 500,
+    duration: 12,
+    totalMembers: 12,
+    slots: Array.from({ length: 12 }, (_, i) => ({
+      slotNumber: i + 1,
+      payoutMonth: i + 1,
+      isAvailable: i >= 8, // First 8 slots are taken
+      memberId: i >= 8 ? undefined : `member-${i + 1}`,
+      memberAvatar: i >= 8 ? undefined : `https://images.unsplash.com/photo-${1500000000000 + i}?w=40&h=40&fit=crop&crop=face`,
+    })),
+    status: 'active',
+    startDate: '2024-01-01',
+    createdBy: 'mock-user-1',
+    currentCycle: 3,
+  },
+  {
+    id: 'group-2',
+    name: 'Second Savings Group',
+    description: 'Monthly savings group for medium-term goals',
+    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=200&fit=crop',
+    monthlyAmount: 1000,
+    duration: 24,
+    totalMembers: 20,
+    slots: Array.from({ length: 20 }, (_, i) => ({
+      slotNumber: i + 1,
+      payoutMonth: i + 1,
+      isAvailable: i >= 15, // First 15 slots are taken
+      memberId: i >= 15 ? undefined : `member-${i + 1}`,
+      memberAvatar: i >= 15 ? undefined : `https://images.unsplash.com/photo-${1500000000000 + i}?w=40&h=40&fit=crop&crop=face`,
+    })),
+    status: 'pending',
+    startDate: '2024-02-01',
+    createdBy: 'mock-user-2',
+    currentCycle: 1,
+  },
+  {
+    id: 'group-3',
+    name: 'Third Savings Group',
+    description: 'Monthly savings group for long-term goals',
+    image: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=400&h=200&fit=crop',
+    monthlyAmount: 2000,
+    duration: 36,
+    totalMembers: 30,
+    slots: Array.from({ length: 30 }, (_, i) => ({
+      slotNumber: i + 1,
+      payoutMonth: i + 1,
+      isAvailable: false, // All slots are taken
+      memberId: `member-${i + 1}`,
+      memberAvatar: `https://images.unsplash.com/photo-${1500000000000 + i}?w=40&h=40&fit=crop&crop=face`,
+    })),
+    status: 'full',
+    startDate: '2024-03-01',
+    createdBy: 'mock-user-3',
+    currentCycle: 2,
+  },
+];
+
 export const useGroupsStore = create<GroupsStore>((set, get) => ({
-  // Initial state
-  groups: [],
+  // Initial state with mock data
+  groups: mockGroups,
   backendGroups: [],
   selectedGroup: null,
   actor: null,
@@ -155,12 +220,13 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
       group.slots.some(slot => slot.isAvailable)
     );
     
-    console.log('🔍 getAvailableGroups filter:', {
-      totalGroups: state.groups.length,
-      pendingGroups: state.groups.filter(g => g.status === 'pending').length,
-      availableGroups: availableGroups.length,
-      groupNames: availableGroups.map(g => g.name)
-    });
+    // Debug: Uncomment for debugging
+    // console.log('🔍 getAvailableGroups filter:', {
+    //   totalGroups: state.groups.length,
+    //   pendingGroups: state.groups.filter(g => g.status === 'pending').length,
+    //   availableGroups: availableGroups.length,
+    //   groupNames: availableGroups.map(g => g.name)
+    // });
     
     return availableGroups;
   },
@@ -200,23 +266,16 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
   fetchAvailableGroups: async () => {
     const { actor } = get();
     if (!actor) {
-      console.log('❌ No actor available for fetchAvailableGroups');
       return;
     }
 
     try {
       set({ isLoading: true, error: null });
-      console.log('🔍 Fetching available groups from backend...');
-      
       const backendGroups = await actor.get_available_groups();
-      console.log('📦 Backend groups received:', backendGroups);
-      
       get().setBackendGroups(backendGroups);
-      console.log('✅ Groups converted and stored:', backendGroups.length, 'groups');
-      
       set({ isLoading: false });
     } catch (error) {
-      console.error('❌ Fetch available groups error:', error);
+      console.error('Fetch available groups error:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to fetch available groups',
         isLoading: false 
@@ -226,15 +285,13 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
 
   createGroup: async (data: CreateGroupData): Promise<boolean> => {
     const { actor } = get();
-    if (!actor) {
-      console.log('❌ No actor available for createGroup');
+        if (!actor) {
       set({ error: 'Not connected to backend' });
       return false;
     }
 
     try {
       set({ isLoading: true, error: null });
-      console.log('🏗️ Creating group with data:', data);
 
       // Convert payout order
       const payoutOrder = data.payoutOrder === 'manual' ? { Manual: null } : { Auto: null };
@@ -248,25 +305,19 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         payout_order: payoutOrder,
       };
 
-      console.log('📤 Sending create group request:', request);
       const result = await actor.create_group(request);
-      console.log('📥 Create group result:', result);
 
       if ('Ok' in result) {
         const createdGroup = result.Ok;
-        console.log('✅ Group created successfully:', createdGroup);
-        
         const newFrontendGroup = convertBackendToFrontendGroup(createdGroup);
         get().addGroup(newFrontendGroup);
         
         // Refresh groups to get updated data
-        console.log('🔄 Refreshing available groups...');
         await get().fetchAvailableGroups();
         
         set({ isLoading: false });
         return true;
       } else {
-        console.log('❌ Create group failed:', result.Err);
         set({ 
           error: result.Err,
           isLoading: false 
@@ -274,7 +325,7 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         return false;
       }
     } catch (error) {
-      console.error('❌ Create group error:', error);
+      console.error('Create group error:', error);
       set({ 
         error: error instanceof Error ? error.message : 'Failed to create group',
         isLoading: false 
