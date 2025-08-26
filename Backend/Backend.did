@@ -1,3 +1,78 @@
+type CreateGroupRequest = record {
+  payout_order : PayoutOrder;
+  monthly_amount : float64;
+  name : text;
+  description : text;
+  duration_months : nat32;
+  total_members : nat32;
+};
+type CreateUserRequest = record { name : text };
+type CyclePayment = record {
+  id : text;
+  status : PaymentStatus;
+  cycle_number : nat32;
+  created_at : nat64;
+  user_id : text;
+  group_id : text;
+  paid_at : opt nat64;
+  amount : float64;
+};
+type Group = record {
+  id : text;
+  status : GroupStatus;
+  payout_order : PayoutOrder;
+  monthly_amount : float64;
+  name : text;
+  current_members : nat32;
+  description : text;
+  created_at : nat64;
+  created_by : text;
+  available_slots : vec nat32;
+  duration_months : nat32;
+  total_members : nat32;
+  current_cycle : nat32;
+};
+type GroupMembership = record {
+  id : text;
+  status : MembershipStatus;
+  has_received_payout : bool;
+  user_id : text;
+  total_paid : float64;
+  slot_number : nat32;
+  group_id : text;
+  joined_at : nat64;
+  payout_month : nat32;
+};
+type GroupStatus = variant { Full; Active; Cancelled; Completed; Pending };
+type JoinGroupRequest = record { preferred_slot : opt nat32; group_id : text };
+type MembershipStatus = variant { Expelled; Left; Inactive; Active };
+type PaymentRequest = record { cycle_number : nat32; group_id : text };
+type PaymentStatus = variant { Failed; Paid; Overdue; Pending };
+type PayoutOrder = variant { Auto; Manual };
+type Result = variant { Ok : Group; Err : text };
+type Result_1 = variant { Ok : User; Err : text };
+type Result_2 = variant { Ok : GroupMembership; Err : text };
+type Result_3 = variant { Ok : CyclePayment; Err : text };
+type User = record {
+  id : text;
+  name : text;
+  created_at : nat64;
+  is_active : bool;
+  joined_groups : vec text;
+};
 service : {
-    "greet": (text) -> (text) query;
+  create_group : (CreateGroupRequest) -> (Result);
+  create_user : (CreateUserRequest) -> (Result_1);
+  get_available_groups : () -> (vec Group) query;
+  get_current_user : () -> (opt User) query;
+  get_current_user_groups : () -> (vec Group) query;
+  get_current_user_payments : (text) -> (vec CyclePayment) query;
+  get_group : (text) -> (opt Group) query;
+  get_group_memberships : (text) -> (vec GroupMembership) query;
+  get_user : (text) -> (opt User) query;
+  get_user_groups : (text) -> (vec Group) query;
+  get_user_payments : (text, text) -> (vec CyclePayment) query;
+  greet : (text) -> (text) query;
+  join_group : (JoinGroupRequest) -> (Result_2);
+  make_payment : (PaymentRequest) -> (Result_3);
 }
