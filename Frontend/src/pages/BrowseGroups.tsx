@@ -11,6 +11,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import { useToast } from "@/hooks/use-toast";
 import GroupDetailsModal from "@/components/GroupDetailsModal";
 import FilterModal from "@/components/FilterModal";
+import AIRecommendationChat from "@/components/AIRecommendationChat";
 
 interface FilterState {
   amountRange: [number, number];
@@ -416,6 +417,9 @@ const BrowseGroups = () => {
         onFiltersChange={setFilters}
         onClearFilters={clearFilters}
       />
+
+      {/* AI Recommendation Chat */}
+      <AIRecommendationChat />
     </div>
   );
 };
