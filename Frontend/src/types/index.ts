@@ -15,7 +15,7 @@ export interface Group {
   duration: number; // months
   totalMembers: number;
   slots: Slot[];
-  status: 'active' | 'full' | 'completed' | 'pending';
+  status: 'active' | 'full' | 'completed' | 'pending' | 'cancelled';
   startDate: string;
   createdBy: string;
   currentCycle: number;

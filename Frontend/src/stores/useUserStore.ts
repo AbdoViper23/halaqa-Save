@@ -1,66 +1,91 @@
 import { create } from 'zustand';
 import { UserProfile, Transaction } from '@/types';
+import { createActor, User, CyclePayment, CreateUserRequest } from '@/services/backend';
+import type { _SERVICE } from '@/declarations/Backend/Backend.did';
 
 interface UserStore {
+  // State
   profile: UserProfile | null;
+  user: User | null;
   transactions: Transaction[];
-  userGroups: string[]; // Group IDs user is part of
+  userGroups: string[];
+  actor: _SERVICE | null;
+  isLoading: boolean;
+  error: string | null;
+  connecting: boolean;
+
+  // Actions
   setProfile: (profile: UserProfile) => void;
+  setUser: (user: User | null) => void;
+  setActor: (actor: _SERVICE | null) => void;
   addTransaction: (transaction: Transaction) => void;
   joinGroup: (groupId: string) => void;
   leaveGroup: (groupId: string) => void;
   updateStats: (stats: Partial<UserProfile>) => void;
+  
+  // API actions
+  initializeActor: () => Promise<void>;
+  createUser: (name: string) => Promise<boolean>;
+  fetchCurrentUser: () => Promise<void>;
+  fetchUserPayments: (groupId: string) => Promise<void>;
+  
+  // Utils
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  setConnecting: (connecting: boolean) => void;
 }
 
-// Mock user data
-const mockProfile: UserProfile = {
-  id: 'user-1',
-  name: 'Sarah Johnson',
-  avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face',
-  totalSaved: 15500,
-  activeGroups: 3,
-  completedGroups: 5,
-  successRate: 95,
-  joinedDate: '2023-06-15',
-};
+// Helper function to convert backend User to UserProfile
+const convertUserToProfile = (user: User): UserProfile => ({
+  id: user.id,
+  name: user.name,
+  avatar: '', // Will be set from external source or default
+  totalSaved: 0, // Will be calculated from groups/payments
+  activeGroups: user.joined_groups.length,
+  completedGroups: 0, // Will be calculated
+  successRate: 100, // Will be calculated
+  joinedDate: new Date(Number(user.created_at) / 1000000).toISOString().split('T')[0],
+});
 
-const mockTransactions: Transaction[] = [
-  {
-    id: 'tx-1',
-    groupId: 'group-1',
-    groupName: 'Young Professionals',
-    amount: 500,
-    date: '2024-01-15',
-    status: 'completed',
-    type: 'payment',
-    paymentProof: 'receipt-1.png'
-  },
-  {
-    id: 'tx-2',
-    groupId: 'group-2',
-    groupName: 'Family Circle',
-    amount: 2500,
-    date: '2024-01-10',
-    status: 'completed',
-    type: 'payout',
-  },
-  {
-    id: 'tx-3',
-    groupId: 'group-1',
-    groupName: 'Young Professionals',
-    amount: 500,
-    date: '2024-02-15',
-    status: 'pending',
-    type: 'payment',
-  },
-];
+// Helper function to convert CyclePayment to Transaction
+const convertPaymentToTransaction = (payment: CyclePayment, groupName: string): Transaction => ({
+  id: payment.id,
+  groupId: payment.group_id,
+  groupName,
+  amount: payment.amount,
+  date: new Date(Number(payment.created_at) / 1000000).toISOString().split('T')[0],
+  status: 'status' in payment.status ? 
+    (payment.status as any).Paid ? 'completed' : 
+    (payment.status as any).Pending ? 'pending' : 
+    (payment.status as any).Failed ? 'failed' : 'pending'
+    : 'pending',
+  type: 'payment' as const,
+  paymentProof: payment.paid_at ? 'blockchain-proof' : undefined,
+});
 
 export const useUserStore = create<UserStore>((set, get) => ({
-  profile: mockProfile,
-  transactions: mockTransactions,
-  userGroups: ['group-1', 'group-2', 'group-3'],
+  // Initial state
+  profile: null,
+  user: null,
+  transactions: [],
+  userGroups: [],
+  actor: null,
+  isLoading: false,
+  error: null,
+  connecting: false,
 
+  // Basic setters
   setProfile: (profile) => set({ profile }),
+  setUser: (user) => {
+    set({ user });
+    if (user) {
+      set({ profile: convertUserToProfile(user) });
+    }
+  },
+  setActor: (actor) => set({ actor }),
+  setLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error }),
+  setConnecting: (connecting) => set({ connecting }),
 
   addTransaction: (transaction) => 
     set((state) => ({ 
@@ -89,4 +114,106 @@ export const useUserStore = create<UserStore>((set, get) => ({
     set((state) => ({ 
       profile: state.profile ? { ...state.profile, ...stats } : null 
     })),
+
+  // Initialize ICP actor
+  initializeActor: async () => {
+    try {
+      set({ connecting: true, error: null });
+      const icpActor = await createActor();
+      set({ actor: icpActor, connecting: false });
+      
+      // Try to fetch current user after connecting
+      await get().fetchCurrentUser();
+    } catch (error) {
+      console.error('Failed to initialize actor:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      set({ 
+        error: 'Failed to connect to ICP canister. Please check your configuration.',
+        connecting: false 
+      });
+    }
+  },
+
+  // API actions
+  createUser: async (name: string) => {
+    const { actor } = get();
+    if (!actor) {
+      set({ error: 'Not connected to backend' });
+      return false;
+    }
+
+    try {
+      set({ isLoading: true, error: null });
+      const request: CreateUserRequest = { name };
+      const result = await actor.create_user(request);
+      
+      if ('Ok' in result) {
+        get().setUser(result.Ok);
+        set({ isLoading: false });
+        return true;
+      } else {
+        set({ 
+          error: result.Err,
+          isLoading: false 
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Create user error:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to create user',
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  fetchCurrentUser: async () => {
+    const { actor } = get();
+    if (!actor) return;
+
+    try {
+      set({ isLoading: true, error: null });
+      const result = await actor.get_current_user();
+      const user = result[0] || null;
+      
+      if (user) {
+        get().setUser(user);
+        set({ userGroups: user.joined_groups });
+      }
+      set({ isLoading: false });
+    } catch (error) {
+      console.error('Fetch user error:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch user',
+        isLoading: false 
+      });
+    }
+  },
+
+  fetchUserPayments: async (groupId: string) => {
+    const { actor } = get();
+    if (!actor) return;
+
+    try {
+      set({ isLoading: true, error: null });
+      const payments = await actor.get_current_user_payments(groupId);
+      
+      // Convert payments to transactions
+      const transactions = payments.map(payment => 
+        convertPaymentToTransaction(payment, `Group ${groupId}`)
+      );
+      
+      set((state) => ({
+        transactions: [...transactions, ...state.transactions.filter(t => t.groupId !== groupId)],
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Fetch payments error:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch payments',
+        isLoading: false 
+      });
+    }
+  },
 }));
