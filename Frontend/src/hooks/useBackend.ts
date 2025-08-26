@@ -18,7 +18,6 @@ export const useBackend = () => {
       setConnecting(true);
       setConnectionError(null);
       
-      console.log('🚀 Initializing ICP Backend connection...');
       const icpActor = await createActor();
       
       // Set actor in all stores
@@ -26,19 +25,10 @@ export const useBackend = () => {
       setUserActor(icpActor);
       setGroupsActor(icpActor);
       
-      console.log('✅ Backend connection successful - actor distributed to stores!');
-      
     } catch (error) {
-      console.error('❌ Failed to initialize backend:', error);
+      console.error('Failed to initialize backend:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setConnectionError(errorMessage);
-      
-      // Log more details for debugging
-      console.error('🔍 Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
     } finally {
       setConnecting(false);
     }

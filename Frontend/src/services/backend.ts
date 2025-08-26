@@ -93,13 +93,6 @@ const getNetworkConfig = (): NetworkConfig => {
 export const createActor = async (): Promise<_SERVICE> => {
   try {
     const { network, host, isDevelopment } = getNetworkConfig();
-        console.log('🔧 Environment Variables:', {
-      VITE_BACKEND_CANISTER_ID: import.meta.env.VITE_BACKEND_CANISTER_ID,
-      VITE_DFX_NETWORK: import.meta.env.VITE_DFX_NETWORK,
-      VITE_LOCAL_HOST: import.meta.env.VITE_LOCAL_HOST,
-    });
-    
-    console.log('🌐 Connecting to ICP:', { network, host, canisterId: BACKEND_CANISTER_ID });
     
     // Validate canister ID
     if (!BACKEND_CANISTER_ID || BACKEND_CANISTER_ID === 'your-canister-id-here') {
@@ -111,12 +104,10 @@ export const createActor = async (): Promise<_SERVICE> => {
 
     // In development/local, fetch the root key
     if (network === 'local' || isDevelopment) {
-      console.log('Fetching root key for local development...');
       try {
         await agent.fetchRootKey();
-        console.log('✅ Root key fetched successfully');
       } catch (err) {
-        console.warn('⚠️ Could not fetch root key, but continuing anyway:', err);
+        console.warn('Could not fetch root key:', err);
         // Continue without throwing error - sometimes this works anyway
       }
     }
@@ -128,17 +119,11 @@ export const createActor = async (): Promise<_SERVICE> => {
     }) as _SERVICE;
 
     // Test the connection with a simple query
-    console.log('Testing connection...');
     try {
-      const greeting = await actor.greet('Connection Test');
-      console.log('✅ Connection successful!', greeting);
-      
-      // Also test get_available_groups
-      const groups = await actor.get_available_groups();
-      console.log('✅ Backend groups test successful:', groups.length, 'groups');
-      
+      await actor.greet('Connection Test');
+      await actor.get_available_groups();
     } catch (testError) {
-      console.error('❌ Connection test failed:', testError);
+      console.error('Connection test failed:', testError);
       throw new Error(`Connection test failed: ${testError.message}`);
     }
 

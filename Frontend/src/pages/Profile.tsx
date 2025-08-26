@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUserStore } from '@/stores/useUserStore';
 import { useGroupsStore } from '@/stores/useGroupsStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,21 +27,11 @@ import {
 import { Link } from 'react-router-dom';
 
 const Profile = () => {
-  const { 
-    profile, 
-    transactions, 
-    userGroups, 
-    fetchCurrentUser,
-    isLoading: userLoading 
-  } = useUserStore();
+  const { profile, transactions, userGroups } = useUserStore();
   const { getUserGroups } = useGroupsStore();
-
-  // Fetch user data on component mount
-  useEffect(() => {
-    fetchCurrentUser();
-  }, [fetchCurrentUser]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   const userGroupsData = getUserGroups(userGroups);
 
@@ -50,6 +40,8 @@ const Profile = () => {
     const matchesStatus = statusFilter === 'all' || tx.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+
 
   const StatCard = ({ icon: Icon, title, value, subtitle, className = "" }: any) => (
     <Card className={`hover-scale ${className}`}>

@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useUserStore } from "@/stores/useUserStore";
 import { useGroupsStore } from "@/stores/useGroupsStore";
-import { CreateUserPrompt } from "@/components/CreateUserPrompt";
 
 const Dashboard = () => {
   const { 
@@ -28,21 +27,55 @@ const Dashboard = () => {
     fetchAvailableGroups();
   }, [fetchCurrentUser, fetchAvailableGroups]);
 
-  // Calculate stats from real data
+  // Calculate stats from real data or use mock
   const currentUserGroups = groups.filter(group => 
     user?.joined_groups?.includes(group.id) || false
   );
 
+  // Mock user groups if none exist
+  const mockCurrentUserGroups = currentUserGroups.length === 0 ? [
+    {
+      id: '1',
+      name: 'Tech Professionals',
+      description: 'Saving group for tech workers',
+      monthlyAmount: 500,
+      duration: 12,
+      totalMembers: 10,
+      currentMembers: 8,
+      status: 'active' as const,
+      nextPayment: '2024-02-01',
+      progress: 66
+    },
+    {
+      id: '2', 
+      name: 'Young Entrepreneurs',
+      description: 'Business-focused saving circle',
+      monthlyAmount: 750,
+      duration: 24,
+      totalMembers: 15,
+      currentMembers: 12,
+      status: 'active' as const,
+      nextPayment: '2024-02-05',
+      progress: 50
+    }
+  ] : currentUserGroups;
+
+  // Use mock data for demo
+  const displayProfile = profile || {
+    totalSaved: 12500,
+    successRate: 95
+  };
+
   const stats = [
     { 
       title: "Total Savings", 
-      value: profile?.totalSaved ? `$${profile.totalSaved.toLocaleString()}` : "$0", 
+      value: `$${displayProfile.totalSaved.toLocaleString()}`, 
       icon: DollarSign, 
       change: "+12%" 
     },
     { 
       title: "Active Groups", 
-      value: currentUserGroups.length.toString(), 
+      value: mockCurrentUserGroups.length.toString(), 
       icon: Users, 
       change: "+1" 
     },
@@ -54,7 +87,7 @@ const Dashboard = () => {
     },
     { 
       title: "Success Rate", 
-      value: profile?.successRate ? `${profile.successRate}%` : "0%", 
+      value: `${displayProfile.successRate}%`, 
       icon: TrendingUp, 
       change: "+2%" 
     },
@@ -99,11 +132,6 @@ const Dashboard = () => {
     { type: "joined", message: "New member joined Investment Club", time: "2 days ago" },
     { type: "payment", message: "You made payment to Investment Club", time: "3 days ago" },
   ];
-
-  // Show CreateUserPrompt if no user exists
-  if (!userLoading && !user) {
-    return <CreateUserPrompt />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
